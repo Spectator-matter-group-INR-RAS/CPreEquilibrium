@@ -143,21 +143,12 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
                 position += nucleon->position;
                 momentum += nucleon->momentum;
             }
-
-            if ((clusterAZ.first == 0 and clusterAZ.second > 1) or (clusterAZ.first > 1 and clusterAZ.second == 0))
-            {
-                // there definitely are children since this is a multiproton or multineutron cluster
-                unprocessed.push(topView->children.value().first);
-                unprocessed.push(topView->children.value().second);
-            } else
-            {
-                cola::Particle cluster;
-                cluster.position = position / topView->vertices.size();
-                cluster.momentum = momentum;
-                cluster.pdgCode = cola::AZToPdg(clusterAZ);
-                cluster.pClass = side;
-                clusters.push_back(cluster);
-            }
+            cola::Particle cluster;
+            cluster.position = position / topView->vertices.size();
+            cluster.momentum = momentum;
+            cluster.pdgCode = cola::AZToPdg(clusterAZ);
+            cluster.pClass = side;
+            clusters.push_back(cluster);
         } else if (topView->children.has_value()) 
         {
             unprocessed.push(topView->children.value().first);
@@ -206,6 +197,9 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
             std::pow(G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.getAZ().first), static_cast<G4int>(cluster.getAZ().second)), 2) +
             cluster.momentum.spatialPart().mag2());
         cluster.momentum.boost(pNucleus);
+        if (std::isnan(cluster.momentum.z)) {
+            std::cout << "Shouldn't be alone like that hmmmmm\n";
+        }
     }
 
     return clusters;
