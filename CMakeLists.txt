@@ -15,7 +15,7 @@ set(COLA_MODULE_NAME CPreEquilibrium)
 
 # Add library target
 set(srcs Wrapper/CPreEquilibriumFactory.cc MSTClustering/MSTClustering.cc MSTClustering/CoordinateMSTClustering.cc
-        ExcitationEnergy/Ericson.cc ExcitationEnergy/GaimardSchmidt.cc ExcitationEnergy/ExcitationEnergy.cc)
+        ExcitationEnergy/Ericson.cc ExcitationEnergy/GaimardSchmidt.cc ExcitationEnergy/ExcitationEnergy.cc RepulsionStage/Repulsion.cc)
 
 add_library(CPreEquilibrium SHARED ${srcs})
 

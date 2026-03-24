@@ -187,7 +187,7 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
 
     if (_consider_rep) 
     {
-        // do something
+        RepulsionStage::CalculateRepulsion(std::move(clusters));
     }
 
     // make mass consistent with G4 tables and boost back from rest frame
@@ -197,9 +197,6 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
             std::pow(G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.getAZ().first), static_cast<G4int>(cluster.getAZ().second)), 2) +
             cluster.momentum.spatialPart().mag2());
         cluster.momentum.boost(pNucleus);
-        if (std::isnan(cluster.momentum.z)) {
-            std::cout << "Shouldn't be alone like that hmmmmm\n";
-        }
     }
 
     return clusters;

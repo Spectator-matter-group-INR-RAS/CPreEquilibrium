@@ -24,6 +24,7 @@ cola::EventParticles CalculateRepulsion(cola::EventParticles&& frags);
 class BHNode {
  public:
   int Z; // total charge
+  int nPart; // number of particles in the node
   cola::Vector3<double> cr; // mean coordinates of the charges in box
   cola::Vector3<double> ctr; // coordinates of the box center
   std::vector<std::unique_ptr<BHNode>> children; // child nodes
@@ -59,7 +60,7 @@ class BHTree {
 
   cola::Vector3<double> DuoForce(const cola::Vector3<double> vec, const double& from_totalA) const;
 
-  void InsertFragment(const std::unique_ptr<BHNode>& node, const cola::Vector3<double>& cords, int pIndex);
+  void InsertFragment(const std::unique_ptr<BHNode>& node, const cola::Vector3<double>& cords, int pIndex, int Z);
 };
 
 }

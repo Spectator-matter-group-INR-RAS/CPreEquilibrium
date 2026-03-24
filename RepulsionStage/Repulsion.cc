@@ -17,11 +17,12 @@ cola::EventParticles CalculateRepulsion(cola::EventParticles&& frags) {
 
     auto r_delta = bhtree.Iterate(temp_timedelta);
 
-    /*for (auto& frag : frags) {
-      nucleons[i].position.x += r_delta[maps[i]].x();
-      nucleons[i].position.y += r_delta[maps[i]].y();
-      nucleons[i].position.z += r_delta[maps[i]].z();
-    }*/
+    for (size_t i = 0; i < frags.size(); i++) {
+      frags[i].position.t += temp_timedelta;
+      frags[i].position.x += r_delta[i].x;
+      frags[i].position.y += r_delta[i].y;
+      frags[i].position.z += r_delta[i].z;
+    }
     time += temp_timedelta;
   }
   return frags;
@@ -51,45 +52,48 @@ void BHTree::BuildBHTree(const cola::EventParticles& frags) {
   rootnode_ = InitializeRoot(frags);
 
   for (size_t i = 0; i < frags.size(); i++) {
-    InsertFragment(rootnode_, frags.at(i).position.spatialPart(), i);
+    InsertFragment(rootnode_, frags.at(i).position.spatialPart(), i, frags.at(i).getAZ().second);
   }
 }
 
-void BHTree::InsertFragment(const std::unique_ptr<BHNode>& node, const cola::Vector3<double>& cords, int pIndex) {
-  if (node->Z == 0) {
-    node->Z = 1;
+void BHTree::InsertFragment(const std::unique_ptr<BHNode>& node, const cola::Vector3<double>& cords, int pIndex, int Z) {
+  if (node->nPart == 0) {
+    node->Z += Z;
     node->cr = cords;
     node->index = pIndex;
+    node->nPart++;
     return;
   }
-  if (node->Z == 1) {
+  if (node->nPart == 1) {
     node->Divide();
 
-    int index = 0;
-    if (node->cr.x > node->ctr.x) index |= 1;
-    if (node->cr.y > node->ctr.y) index |= 2;
-    if (node->cr.z > node->ctr.z) index |= 4;
-    InsertNucleon(node->children[index], node->cr, node->index);
+    int i = 0;
+    if (node->cr.x > node->ctr.x) i |= 1;
+    if (node->cr.y > node->ctr.y) i |= 2;
+    if (node->cr.z > node->ctr.z) i |= 4;
+    InsertFragment(node->children[i], node->cr, node->index, node->Z);
 
-    index = 0;
-    if (cords.x > node->ctr.x) index |= 1;
-    if (cords.y > node->ctr.y) index |= 2;
-    if (cords.z > node->ctr.z) index |= 4;
-    InsertNucleon(node->children[index], cords, pIndex);
+    i = 0;
+    if (cords.x > node->ctr.x) i |= 1;
+    if (cords.y > node->ctr.y) i |= 2;
+    if (cords.z > node->ctr.z) i |= 4;
+    InsertFragment(node->children[i], cords, pIndex, Z);
 
     node->cr = (node->cr + cords) / 2;
-    node->Z += 1;
+    node->Z += Z;
     node->index = -1;
+    node->nPart++;
     return;
   }
   node->cr = (node->cr * node->Z + cords) / (node->Z + 1);
-  node->Z += 1;
+  node->Z += Z;
+  node->nPart++;
 
-  int index = 0;
-  if (cords.x > node->ctr.x) index |= 1;
-  if (cords.y > node->ctr.y) index |= 2;
-  if (cords.z > node->ctr.z) index |= 4;
-  InsertNucleon(node->children[index], cords, pIndex);
+  int i = 0;
+  if (cords.x > node->ctr.x) i |= 1;
+  if (cords.y > node->ctr.y) i |= 2;
+  if (cords.z > node->ctr.z) i |= 4;
+  InsertFragment(node->children[i], cords, pIndex, Z);
 }
 
 double BHTree::GetAdaptiveTimeDelta() const {
@@ -133,8 +137,8 @@ void BHTree::GetForces(const BHNode* node) {
   if (node->Z == 0) {
     return;
   }
-  if (node->Z == 1) {
-    fs_[maps_node->index)] += Force(rootnode_.get(), node);
+  if (node->nPart == 1) {
+    fs_[node->index] += Force(rootnode_.get(), node);
     return;
   }
   for (const auto& child : node->children) {
@@ -143,10 +147,10 @@ void BHTree::GetForces(const BHNode* node) {
 }
 
 cola::Vector3<double> BHTree::Force(const BHNode* rootnode, const BHNode* node) const {
-  if ((rootnode->Z == 0) || ((rootnode->index != -1) && maps_->at(rootnode->index) == maps_->at(node->index))) {
+  if ((rootnode->Z == 0) || ((rootnode->index != -1) && rootnode->index == node->index)) {
     return {0.0, 0.0, 0.0};
   }
-  if (rootnode->Z == 1) {
+  if (rootnode->nPart == 1) {
     return DuoForce(node->cr - rootnode->cr, rootnode->Z);
   }
   if ((rootnode->size / (node->cr - rootnode->cr).mag()) < theta) {
