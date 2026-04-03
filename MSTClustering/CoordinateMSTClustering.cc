@@ -133,7 +133,7 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
         if (topView->height <= cd)
         {
             cola::AZ clusterAZ = {0, 0};
-            cola::LorentzVector position, momentum;
+            cola::LorentzVector position{0,0,0,0}, momentum{0,0,0,0};
 
             for (auto nucleon : topView->vertices)
             {
@@ -201,3 +201,4 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
 
     return clusters;
 }
+

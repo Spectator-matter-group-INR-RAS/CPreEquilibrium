@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(CPreEquilibrium VERSION 1.1)
 
-set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(COLA REQUIRED)

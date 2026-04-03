@@ -44,7 +44,7 @@ std::unique_ptr<BHNode> BHTree::InitializeRoot(const cola::EventParticles& frags
   maxVector.z = std::max_element(frags.begin(), frags.end(), [](const cola::Particle& l, const cola::Particle& r) {return l.position.z < r.position.z;})->position.z;
 
   auto range = maxVector - minVector;
-  double maxRange = std::max(range.x, range.y, range.z);
+  double maxRange = std::max({range.x, range.y, range.z});
   return std::make_unique<BHNode>(maxRange, (minVector + maxVector) / 2);
 }
 

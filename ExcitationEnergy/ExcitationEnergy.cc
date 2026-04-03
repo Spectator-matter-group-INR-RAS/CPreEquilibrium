@@ -76,7 +76,7 @@ void ExcitationEnergy::SetParametersCorrectedALADIN(G4double e0_in, G4double c0_
 
 void ExcitationEnergy::SetParametersCorrectedALADINFromFile() {
     std::vector<G4double> ParamVect;
-    G4double param = NULL;
+    G4double param = 0;
     G4int iter=0;
     while(1){
         ParamFile>>param;
