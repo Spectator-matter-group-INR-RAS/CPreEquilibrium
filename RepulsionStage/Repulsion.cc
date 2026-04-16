@@ -28,7 +28,7 @@ cola::EventParticles CalculateRepulsion(cola::EventParticles&& frags) {
   return frags;
 }
 
-BHTree::BHTree(cola::EventParticles& frags) : frags_(frags) {
+BHTree::BHTree(cola::EventParticles& frags) : frags_(frags), fs_(frags.size(), {.0, .0, .0}) {
   BuildBHTree(frags);
   GetForces(rootnode_.get());
 }

@@ -32,7 +32,7 @@ class BHNode {
   double size; // size of the box
 
   BHNode() = default;
-  BHNode(double size, const cola::Vector3<double>& ctr) : size(size), ctr(ctr), Z(0), cr({0.0, 0.0, 0.0}), index(-1) {};
+  BHNode(double size, const cola::Vector3<double>& ctr) : size(size), ctr(ctr), Z(0), nPart(0), cr({0.0, 0.0, 0.0}), index(-1) {};
   ~BHNode() = default;
   void Divide();
 };
