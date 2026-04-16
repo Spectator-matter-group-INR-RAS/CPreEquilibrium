@@ -55,9 +55,9 @@ std::vector<MSTClustering::Edge> CoordinateMSTClustering::get_edges(const cola::
     // particle vector is sorted, process spectatorA nucleons (check for no spectatorA nucleons)
     if (spectIterA != endIter)
     {
-        for (auto iter = spectIterA; iter != spectIterB; iter++)
+        for (auto iter = spectIterA; iter != spectIterB; ++iter)
         {
-            for (auto jter = iter + 1; jter != spectIterB; jter++)
+            for (auto jter = iter + 1; jter != spectIterB; ++jter)
             {
                 auto delta = iter->position - jter->position;
                 edges.emplace_back(std::make_pair(&(*iter), &(*jter)), std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z), cola::ParticleClass::spectatorA);
@@ -65,9 +65,9 @@ std::vector<MSTClustering::Edge> CoordinateMSTClustering::get_edges(const cola::
         }
     }
     // repeat for spectatorB nucleons
-    for (auto iter = spectIterB; iter != endIter; iter++)
+    for (auto iter = spectIterB; iter != endIter; ++iter)
     {
-        for (auto jter = iter + 1; jter != endIter; jter++)
+        for (auto jter = iter + 1; jter != endIter; ++jter)
         {
             auto delta = iter->position - jter->position;
             edges.emplace_back(std::make_pair(&(*iter), &(*jter)), std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z), cola::ParticleClass::spectatorB);
@@ -76,7 +76,7 @@ std::vector<MSTClustering::Edge> CoordinateMSTClustering::get_edges(const cola::
     return edges;
 }
 
-double get_cd(double Ex, uint A)
+double get_cd(double Ex, uint32_t A)
 {
     if ((Ex / double(A)) < eps0)
     {
@@ -87,7 +87,7 @@ double get_cd(double Ex, uint A)
     return d0 * std::pow(dep, 1. / 3.);
 }
 
-cola::LorentzVector ToColaLorentzVector(G4LorentzVector& lv)
+cola::LorentzVector ToColaLorentzVector(const G4LorentzVector& lv)
 {
     cola::LorentzVector vec;
     vec.e = lv.e();
@@ -100,23 +100,23 @@ cola::LorentzVector ToColaLorentzVector(G4LorentzVector& lv)
 cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventData& data, cola::ParticleClass side) 
 {
     cola::EventParticles clusters;
-    uint count = 0;
+    uint32_t count = 0;
 
     auto& root = side == cola::ParticleClass::spectatorA ? rootA : rootB;
     auto bIter = side == cola::ParticleClass::spectatorA ? spectIterA : spectIterB;
     auto eIter = side == cola::ParticleClass::spectatorA ? spectIterB : endIter;
 
-    uint sourceA = cola::pdgToAZ(side == cola::ParticleClass::spectatorA ? data.iniState.pdgCodeA : data.iniState.pdgCodeB).first;
+    uint32_t sourceA = cola::pdgToAZ(side == cola::ParticleClass::spectatorA ? data.iniState.pdgCodeA : data.iniState.pdgCodeB).first;
     // boost to rest frame for each set of spectators
     cola::LorentzVector pNucleus = {0.0, 0.0, 0.0, 0.0};
-    for (auto particle = bIter; particle != eIter; particle++)
+    for (auto particle = bIter; particle != eIter; ++particle)
     {
         pNucleus += particle->momentum;
     }
-    for (auto particle = bIter; particle != eIter; particle++)
+    for (auto particle = bIter; particle != eIter; ++particle)
     {
         particle->momentum.boost(-pNucleus);
-        count++;
+        ++count;
     }
 
     // get excitation energy
@@ -125,17 +125,17 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
     // at this point the construct_tree() method has already built up MST trees for both sides
     
     double cd = get_cd(exEn, count);
-    auto unprocessed = std::queue<std::shared_ptr<Node>>();
+    auto unprocessed = std::queue<Node*>();
     unprocessed.push(root);
 
     while (!unprocessed.empty()) {
-        Node* topView = unprocessed.front().get();
+        auto* topView = unprocessed.front();
         if (topView->height <= cd)
         {
             cola::AZ clusterAZ = {0, 0};
             cola::LorentzVector position{0,0,0,0}, momentum{0,0,0,0};
 
-            for (auto nucleon : topView->vertices)
+            for (const auto* nucleon : topView->vertices)
             {
                 cola::AZ componentAZ = nucleon->getAZ();
                 clusterAZ.first += componentAZ.first;
@@ -159,30 +159,24 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
     
     // now that we have defined clusters, we need to calculate additional momentum
 
-    if (_extra_momentum) {
+    if (_extra_momentum && clusters.size() > 1) {
         std::vector<double> mass;
+        mass.reserve(clusters.size());
         double totalMass = .0;
 
-        for (auto& cluster: clusters)
+        for (const auto& cluster: clusters)
         {
             mass.push_back(G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.getAZ().first), static_cast<G4int>(cluster.getAZ().second)) + exEn * cluster.getAZ().first / sourceA);
             totalMass += mass.back();
         }
 
         totalMass += 1e-5*MeV; // fix for segfault
-        auto extra_momentum = phaseSpaceDecay.Decay(totalMass, mass);
+        auto extra_momentum = phaseSpaceDecay.CalculateDecay(G4LorentzVector(totalMass, {}), mass);
 
-        for (size_t i = 0; i < clusters.size(); i++)
+        for (size_t i = 0; i < clusters.size(); ++i)
         {
-            clusters.at(i).momentum += ToColaLorentzVector(*extra_momentum->at(i));
+            clusters[i].momentum += ToColaLorentzVector(extra_momentum.at(i));
         }
-
-        // clear generated vector
-        for (auto pointer: *extra_momentum)
-        {
-            delete pointer;
-        }
-        delete extra_momentum;
     }
 
     if (_consider_rep) 

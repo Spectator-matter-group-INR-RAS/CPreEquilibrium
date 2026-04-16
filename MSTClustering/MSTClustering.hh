@@ -22,17 +22,7 @@ public:
     MSTClustering(const MSTClustering&) = delete;
     MSTClustering(MSTClustering&&) = delete;
 
-    std::unique_ptr<cola::EventData> operator()(std::unique_ptr<cola::EventData>&& data) final {
-        // sort particles by pClass (spectators are last)
-        std::sort(data->particles.begin(), data->particles.end(), [](cola::Particle l, cola::Particle r) {return l.pClass < r.pClass;});
-        spectIterA = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle p) {return p.pClass == cola::ParticleClass::spectatorA;});
-        spectIterB = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle p) {return p.pClass == cola::ParticleClass::spectatorB;});
-        endIter = data->particles.end();
-        // construct trees
-        construct_trees(get_edges(*data));
-        // divide trees and process resulting pre-fragments
-        return get_clusters(std::move(data));
-    }
+    std::unique_ptr<cola::EventData> operator()(std::unique_ptr<cola::EventData>&& data) final;
 
 protected:
     using nPair = std::pair<cola::Particle*, cola::Particle*>;        // vertices pair
@@ -45,20 +35,20 @@ protected:
 
     // a single Node with children.
     struct Node {
-        explicit Node(cola::Particle* vertice) : height(0.), vertices(1, vertice) {}
+        explicit Node(cola::Particle* vertex) : height(0.), vertices(1, vertex) {}
         Node() : Node(0) {}
-        Node(std::shared_ptr<Node>&& first, std::shared_ptr<Node>&& second, double height_) : height(height_),
+        Node(Node* first, Node* second, double height_) : height(height_),
         vertices(first->vertices), children(std::make_pair(first, second)) {
             vertices.insert(vertices.end(), second->vertices.begin(), second->vertices.end()); // append second vector
         }
 
         double height;
         std::vector<cola::Particle*> vertices;
-        std::optional<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>> children;
+        std::optional<std::pair<Node*, Node*>> children;
     };
 
-    std::shared_ptr<Node> rootA;
-    std::shared_ptr<Node> rootB;
+    Node* rootA;
+    Node* rootB;
 
     // it is reasonable to use the iterators for quick access to spectators even at this abstract level, so this class has it
     cola::EventParticles::iterator spectIterA;
@@ -67,7 +57,7 @@ protected:
 
 private:
 
-    void construct_trees(std::vector<Edge>&& edgeData);
+    void construct_trees(std::vector<Edge>&& edgeData, std::vector<std::unique_ptr<Node>>& nodes);
 
     // get full graph data from EventData
     virtual std::vector<Edge> get_edges(const cola::EventData&) = 0;
@@ -77,4 +67,4 @@ private:
 
 
 
-#endif //CCLUSTERING_MSTCLUSTERING_H
+#endif // CCLUSTERING_MSTCLUSTERING_H

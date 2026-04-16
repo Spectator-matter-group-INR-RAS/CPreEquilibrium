@@ -7,7 +7,7 @@
 
 #include "MSTClustering.hh"
 #include "G4ExcitationHandler.hh"
-#include "G4FermiPhaseSpaceDecay.hh"
+#include "G4FermiPhaseDecay.hh"
 #include "G4ReactionProductVector.hh"
 #include "G4NucleiProperties.hh"
 
@@ -29,10 +29,7 @@ class CoordinateMSTClustering : public MSTClustering {
     cola::EventParticles calculate_momentum(std::vector<std::vector<cola::Particle*>> noMomClusters, double ExEnA, double ExEnB, CLHEP::Hep3Vector boostA, CLHEP::Hep3Vector boostB, cola::EventParticles rnucsA, cola::EventParticles rnucsB, std::vector<int> rmapsA, std::vector<int> rmapsB);
     cola::EventParticles _process_side(const cola::EventData&, cola::ParticleClass);
 
-    G4FermiPhaseSpaceDecay phaseSpaceDecay;
+    G4FermiPhaseDecay phaseSpaceDecay;
 };
-
-// helper functions
-cola::LorentzVector ToColaLorentzVector(G4LorentzVector& lv);
 
 #endif //CCLUSTERING_GMSTCLUSTERING_H
