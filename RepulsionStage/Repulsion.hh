@@ -58,7 +58,7 @@ class BHTree {
 
   cola::Vector3<double> Force(const BHNode* rootnode, const BHNode* node) const;
 
-  cola::Vector3<double> DuoForce(const cola::Vector3<double> vec, const double& from_totalA) const;
+  cola::Vector3<double> DuoForce(const cola::Vector3<double> vec, const double from_Z) const;
 
   void InsertFragment(const std::unique_ptr<BHNode>& node, const cola::Vector3<double>& cords, int pIndex, int Z);
 };

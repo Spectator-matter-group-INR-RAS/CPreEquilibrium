@@ -163,9 +163,8 @@ cola::Vector3<double> BHTree::Force(const BHNode* rootnode, const BHNode* node) 
   return totalForce;
 }
 
-cola::Vector3<double> BHTree::DuoForce(const cola::Vector3<double> vec, const double& from_Z) const {
-  cola::Vector3<double> fos = vec * CLHEP::elm_coupling * from_Z / std::pow(vec.mag(), 3);
-  return fos;
+cola::Vector3<double> BHTree::DuoForce(const cola::Vector3<double> vec, const double from_Z) const {
+  return vec * (CLHEP::elm_coupling * from_Z / std::pow(vec.mag(), 3));
 }
 
 void BHNode::Divide() {

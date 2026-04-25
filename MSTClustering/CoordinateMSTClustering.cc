@@ -1,12 +1,11 @@
-#include "CoordinateMSTClustering.hh"
+#include <limits>
+#include <queue>
+#include <G4SystemOfUnits.hh>
 
 #include "Repulsion.hh"
 #include "ExcitationEnergy.hh"
 
-#include <limits>
-#include <queue>
-
-#include "G4SystemOfUnits.hh"
+#include "CoordinateMSTClustering.hh"
 
 // constants for implementation
 constexpr double eps0 = 2.17 * MeV;
@@ -31,18 +30,26 @@ std::unique_ptr<cola::EventData> CoordinateMSTClustering::get_clusters(std::uniq
 
     // get clusters
     if (rootA != nullptr)
+    {
         clustersA = _process_side(*data, cola::ParticleClass::spectatorA);
+    }
     if (rootB != nullptr)
+    {
         clustersB = _process_side(*data, cola::ParticleClass::spectatorB);
+    }
 
     // erase spectator nucleons
     data->particles.erase(spectIterA != endIter ? spectIterA : spectIterB, endIter);
 
     // append clusters
     if (rootA != nullptr)
-        data->particles.insert(data->particles.end(), clustersA.begin(), clustersA.end());
+    {
+        data->particles.insert(data->particles.end(), std::make_move_iterator(clustersA.begin()), std::make_move_iterator(clustersA.end()));
+    }
     if (rootB != nullptr)
-        data->particles.insert(data->particles.end(), clustersB.begin(), clustersB.end());
+    {
+        data->particles.insert(data->particles.end(), std::make_move_iterator(clustersB.begin()), std::make_move_iterator(clustersB.end()));
+    }
 
     return std::move(data);
 }
@@ -51,7 +58,8 @@ std::vector<MSTClustering::Edge> CoordinateMSTClustering::get_edges(const cola::
 // Notice that we don't use EventData in this implementation since we have the needed iterators. The possibility is still there though
 {
     std::vector<Edge> edges;
-    
+    edges.reserve(std::pow(std::distance(spectIterA, spectIterB), 2) + std::pow(std::distance(spectIterB, endIter), 2));
+
     // particle vector is sorted, process spectatorA nucleons (check for no spectatorA nucleons)
     if (spectIterA != endIter)
     {
@@ -78,29 +86,29 @@ std::vector<MSTClustering::Edge> CoordinateMSTClustering::get_edges(const cola::
 
 double get_cd(double Ex, uint32_t A)
 {
-    if ((Ex / double(A)) < eps0)
+    const auto Afloat = static_cast<double>(A);
+    if (Ex / Afloat < eps0)
     {
         return d0;
     }
-    double ex = Ex / double(A);
+    double ex = Ex / Afloat;
     double dep = std::exp(-std::pow((ex / b_opt), a_opt)) * c_opt + d_opt;
     return d0 * std::pow(dep, 1. / 3.);
 }
 
 cola::LorentzVector ToColaLorentzVector(const G4LorentzVector& lv)
 {
-    cola::LorentzVector vec;
-    vec.e = lv.e();
-    vec.x = lv.x();
-    vec.y = lv.y();
-    vec.z = lv.z();
-    return vec;
+    return {
+        lv.e(),
+        lv.x(),
+        lv.y(),
+        lv.z(),
+    };
 }
 
-cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventData& data, cola::ParticleClass side) 
+cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventData& data, cola::ParticleClass side)
 {
     cola::EventParticles clusters;
-    uint32_t count = 0;
 
     auto& root = side == cola::ParticleClass::spectatorA ? rootA : rootB;
     auto bIter = side == cola::ParticleClass::spectatorA ? spectIterA : spectIterB;
@@ -109,21 +117,21 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
     uint32_t sourceA = cola::pdgToAZ(side == cola::ParticleClass::spectatorA ? data.iniState.pdgCodeA : data.iniState.pdgCodeB).first;
     // boost to rest frame for each set of spectators
     cola::LorentzVector pNucleus = {0.0, 0.0, 0.0, 0.0};
-    for (auto particle = bIter; particle != eIter; ++particle)
+    for (auto particleIt = bIter; particleIt != eIter; ++particleIt)
     {
-        pNucleus += particle->momentum;
+        pNucleus += particleIt->momentum;
     }
-    for (auto particle = bIter; particle != eIter; ++particle)
+    for (auto particleIt = bIter; particleIt != eIter; ++particleIt)
     {
-        particle->momentum.boost(-pNucleus);
-        ++count;
+        particleIt->momentum.boost(-pNucleus);
     }
+    const auto count = std::distance(bIter, eIter);
 
     // get excitation energy
-    double exEn = ExcitationEnergy(_stat_exen_type, sourceA).GetEnergy(count); 
+    double exEn = ExcitationEnergy(_stat_exen_type, sourceA).GetEnergy(count);
 
     // at this point the construct_tree() method has already built up MST trees for both sides
-    
+
     double cd = get_cd(exEn, count);
     auto unprocessed = std::queue<Node*>();
     unprocessed.push(root);
@@ -149,14 +157,14 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
             cluster.pdgCode = cola::AZToPdg(clusterAZ);
             cluster.pClass = side;
             clusters.push_back(cluster);
-        } else if (topView->children.has_value()) 
+        } else if (topView->children.has_value())
         {
             unprocessed.push(topView->children.value().first);
             unprocessed.push(topView->children.value().second);
         }
         unprocessed.pop();
     }
-    
+
     // now that we have defined clusters, we need to calculate additional momentum
 
     if (_extra_momentum && clusters.size() > 1) {
@@ -171,7 +179,7 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
         }
 
         totalMass += 1e-5*MeV; // fix for segfault
-        auto extra_momentum = phaseSpaceDecay.CalculateDecay(G4LorentzVector(totalMass, {}), mass);
+        const auto extra_momentum = phaseSpaceDecay.CalculateDecay(G4LorentzVector(totalMass, {}), mass);
 
         for (size_t i = 0; i < clusters.size(); ++i)
         {
@@ -179,7 +187,7 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
         }
     }
 
-    if (_consider_rep) 
+    if (_consider_rep)
     {
         RepulsionStage::CalculateRepulsion(std::move(clusters));
     }

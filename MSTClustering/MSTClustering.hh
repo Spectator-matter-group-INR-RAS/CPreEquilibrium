@@ -11,7 +11,7 @@
 #include <vector>
 #include <map>
 
-#include "COLA.hh"
+#include <COLA.hh>
 
 class MSTClustering : public cola::VConverter {
 public:
@@ -35,14 +35,23 @@ protected:
 
     // a single Node with children.
     struct Node {
-        explicit Node(cola::Particle* vertex) : height(0.), vertices(1, vertex) {}
-        Node() : Node(0) {}
-        Node(Node* first, Node* second, double height_) : height(height_),
-        vertices(first->vertices), children(std::make_pair(first, second)) {
+        explicit Node(cola::Particle& vertex)
+            : height(0.)
+            , vertices({&vertex})
+        {
+        }
+        Node() = default;
+        Node(Node* first, Node* second, double height_)
+            : height(height_)
+            , vertices(first->vertices)
+            , children(std::make_pair(first, second))
+        {
             vertices.insert(vertices.end(), second->vertices.begin(), second->vertices.end()); // append second vector
         }
 
-        double height;
+        Node(Node&&) noexcept = default;
+
+        double height = 0.;
         std::vector<cola::Particle*> vertices;
         std::optional<std::pair<Node*, Node*>> children;
     };
@@ -57,14 +66,12 @@ protected:
 
 private:
 
-    void construct_trees(std::vector<Edge>&& edgeData, std::vector<std::unique_ptr<Node>>& nodes);
+    void construct_trees(std::vector<Edge>&& edgeData, std::vector<Node>& nodes);
 
     // get full graph data from EventData
     virtual std::vector<Edge> get_edges(const cola::EventData&) = 0;
     // construct clusters
     virtual std::unique_ptr<cola::EventData> get_clusters(std::unique_ptr<cola::EventData>&&) = 0;
 };
-
-
 
 #endif // CCLUSTERING_MSTCLUSTERING_H
