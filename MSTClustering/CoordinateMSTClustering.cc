@@ -165,39 +165,49 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
         unprocessed.pop();
     }
 
-    // now that we have defined clusters, we need to calculate additional momentum
+    // now that we have defined clusters, we need to recalculate mass (and add momentum)
 
-    if (_extra_momentum && clusters.size() > 1) {
-        std::vector<double> mass;
-        mass.reserve(clusters.size());
-        double totalMass = .0;
+    std::vector<double> masses;
+    masses.reserve(clusters.size());
+    double totalMass = .0;
+    double totalMassEx = 0.;
 
-        for (const auto& cluster: clusters)
-        {
-            mass.push_back(G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.getAZ().first), static_cast<G4int>(cluster.getAZ().second)) + exEn * cluster.getAZ().first / sourceA);
-            totalMass += mass.back();
-        }
+    for (const auto& cluster: clusters)
+    {
+        double mass = G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.getAZ().first), static_cast<G4int>(cluster.getAZ().second));
+        totalMass += mass;
+        if (cluster.pdgCode != 2212 && cluster.pdgCode != 2112) mass += exEn * cluster.getAZ().first / sourceA;
+        masses.push_back(mass);
+        totalMassEx += mass;
+    }
 
-        totalMass += 1e-5*MeV; // fix for segfault
-        const auto extra_momentum = phaseSpaceDecay.CalculateDecay(G4LorentzVector(totalMass, {}), mass);
+    if (_extra_momentum && clusters.size() > 1)
+    {
+        double preFragmentMass = totalMass + exEn;
+        if (preFragmentMass < totalMassEx + 1e-5 * MeV) preFragmentMass += 1e-5 * MeV;
+
+        const auto generatedMomentum = phaseSpaceDecay.CalculateDecay(G4LorentzVector(preFragmentMass, {}), masses);
 
         for (size_t i = 0; i < clusters.size(); ++i)
         {
-            clusters[i].momentum += ToColaLorentzVector(extra_momentum.at(i));
+            clusters[i].momentum = ToColaLorentzVector(generatedMomentum.at(i));
+        }
+    } else {
+        for (size_t i = 0; i < clusters.size(); ++i)
+        {
+            clusters[i].momentum.e = std::sqrt(std::pow(masses[i], 2) + clusters[i].momentum.spatialPart().mag2());
         }
     }
 
+    // repulsion calculation
     if (_consider_rep)
     {
         RepulsionStage::CalculateRepulsion(std::move(clusters));
     }
 
-    // make mass consistent with G4 tables and boost back from rest frame
+    // boost back from rest frame
     for (auto& cluster: clusters)
     {
-        cluster.momentum.e = std::sqrt(
-            std::pow(G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.getAZ().first), static_cast<G4int>(cluster.getAZ().second)), 2) +
-            cluster.momentum.spatialPart().mag2());
         cluster.momentum.boost(pNucleus);
     }
 
