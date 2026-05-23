@@ -1,6 +1,21 @@
-//
-// Created by _amp_ on 10/21/24.
-//
+/**
+ * Copyright (c) 2026 Savva Savenkov, Artemii Novikov
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <G4NucleiProperties.hh>
 #include <G4ExcitationHandler.hh>
@@ -11,6 +26,8 @@
 #include "ExcitationEnergy.hh"
 
 #include "MSTClustering.hh"
+
+using namespace cola;
 
 void MSTClustering::construct_trees(std::vector<Edge>&& edgeData, std::vector<Node>& nodes)
 {
@@ -40,9 +57,9 @@ void MSTClustering::construct_trees(std::vector<Edge>&& edgeData, std::vector<No
     {
         auto v1 = edge.vert.first;
         auto v2 = edge.vert.second;
-        switch (edge.pClass)
+        switch (edge.p_class)
         {
-        case cola::ParticleClass::spectatorA:
+        case cola::ParticleClass::kSpectatorA:
             if (treeA[v1] != treeA[v2]) {
                 nodes.emplace_back(treeA[v1], treeA[v2], edge.size);
                 for (const auto vertex : nodes.back().vertices) {
@@ -50,7 +67,7 @@ void MSTClustering::construct_trees(std::vector<Edge>&& edgeData, std::vector<No
                 }
             }
             break;
-        case cola::ParticleClass::spectatorB:
+        case cola::ParticleClass::kSpectatorB:
             if (treeB[v1] != treeB[v2]) {
                 nodes.emplace_back(treeB[v1], treeB[v2], edge.size);
                 for (const auto vertex : nodes.back().vertices) {
@@ -70,10 +87,10 @@ void MSTClustering::construct_trees(std::vector<Edge>&& edgeData, std::vector<No
 }
 
 std::unique_ptr<cola::EventData> MSTClustering::operator()(std::unique_ptr<cola::EventData>&& data) {
-    // sort particles by pClass (spectators are last)
-    std::sort(data->particles.begin(), data->particles.end(), [](const cola::Particle& l, const cola::Particle& r) { return l.pClass < r.pClass; });
-    spectIterA = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle p) {return p.pClass == cola::ParticleClass::spectatorA;});
-    spectIterB = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle p) {return p.pClass == cola::ParticleClass::spectatorB;});
+    // sort particles by p_class (spectators are last)
+    std::sort(data->particles.begin(), data->particles.end(), [](const cola::Particle& l, const cola::Particle& r) { return l.p_class < r.p_class; });
+    spectIterA = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle p) {return p.p_class == cola::ParticleClass::kSpectatorA;});
+    spectIterB = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle p) {return p.p_class == cola::ParticleClass::kSpectatorB;});
     endIter = data->particles.end();
     // construct trees
     std::vector<Node> nodes; // stores all nodes in trees (improves cpu cache hits)

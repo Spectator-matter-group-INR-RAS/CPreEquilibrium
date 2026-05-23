@@ -17,29 +17,14 @@
  * SOFTWARE.
  */
 
-#include <memory>
+#ifndef CCLUSTERING_CCLUSTERINGMODULE_HH
+#define CCLUSTERING_CCLUSTERINGMODULE_HH
 
 #include "CPreEquilibriumFactory.hh"
-#include "CoordinateMSTClustering.hh"
+#include "COLA.hh"
 
-using namespace cola;
+namespace cola {
+    using CPreEquilibriumModule = GenericModule<CPreEquilibriumFactory>;
+} // namespace cola
 
-std::unique_ptr<VFilter> CPreEquilibriumFactory::Create(const std::unordered_map<std::string, std::string>& paramMap) {
-  if (paramMap.at("clustering_type") == "GMST") {
-    if (auto it = paramMap.find("stat_exen_type"); it != paramMap.end())
-    {
-      excitationEnergyType = std::stoi(it->second);
-    }
-    if (auto it = paramMap.find("consider_coulomb"); it != paramMap.end())
-    {
-      repulsion = std::stoi(it->second);
-    }
-    if (auto it = paramMap.find("simulate_momentum"); it != paramMap.end())
-    {
-      momentum = std::stoi(it->second);
-    }
-    return std::make_unique<CoordinateMSTClustering>(repulsion.value_or(false), momentum.value_or(true), excitationEnergyType.value_or(7));
-  } else {
-    throw std::runtime_error("Clustering type is unrecognized");
-  }
-}
+#endif //CCLUSTERING_CCLUSTERINGMODULE_HH

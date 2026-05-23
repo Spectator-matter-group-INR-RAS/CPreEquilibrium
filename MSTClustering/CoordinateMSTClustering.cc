@@ -1,3 +1,22 @@
+/**
+ * Copyright (c) 2026 Savva Savenkov, Artemii Novikov
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include <limits>
 #include <queue>
 #include <G4SystemOfUnits.hh>
@@ -23,6 +42,8 @@ constexpr double b_opt = 3.183 * MeV;
 constexpr double c_opt = 0.99;
 constexpr double d_opt = 0.29041;
 
+using namespace cola;
+
 std::unique_ptr<cola::EventData> CoordinateMSTClustering::get_clusters(std::unique_ptr<cola::EventData> &&data)
 {
     cola::EventParticles clustersA;
@@ -31,14 +52,14 @@ std::unique_ptr<cola::EventData> CoordinateMSTClustering::get_clusters(std::uniq
     // get clusters
     if (rootA != nullptr)
     {
-        clustersA = _process_side(*data, cola::ParticleClass::spectatorA);
+        clustersA = _process_side(*data, cola::ParticleClass::kSpectatorA);
     }
     if (rootB != nullptr)
     {
-        clustersB = _process_side(*data, cola::ParticleClass::spectatorB);
+        clustersB = _process_side(*data, cola::ParticleClass::kSpectatorB);
     }
 
-    // erase spectator nucleons
+    // erase kSpectator nucleons
     data->particles.erase(spectIterA != endIter ? spectIterA : spectIterB, endIter);
 
     // append clusters
@@ -60,7 +81,7 @@ std::vector<MSTClustering::Edge> CoordinateMSTClustering::get_edges(const cola::
     std::vector<Edge> edges;
     edges.reserve(std::pow(std::distance(spectIterA, spectIterB), 2) + std::pow(std::distance(spectIterB, endIter), 2));
 
-    // particle vector is sorted, process spectatorA nucleons (check for no spectatorA nucleons)
+    // particle vector is sorted, process kSpectatorA nucleons (check for no kSpectatorA nucleons)
     if (spectIterA != endIter)
     {
         for (auto iter = spectIterA; iter != spectIterB; ++iter)
@@ -68,17 +89,17 @@ std::vector<MSTClustering::Edge> CoordinateMSTClustering::get_edges(const cola::
             for (auto jter = iter + 1; jter != spectIterB; ++jter)
             {
                 auto delta = iter->position - jter->position;
-                edges.emplace_back(std::make_pair(&(*iter), &(*jter)), std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z), cola::ParticleClass::spectatorA);
+                edges.emplace_back(std::make_pair(&(*iter), &(*jter)), std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z), cola::ParticleClass::kSpectatorA);
             }
         }
     }
-    // repeat for spectatorB nucleons
+    // repeat for kSpectatorB nucleons
     for (auto iter = spectIterB; iter != endIter; ++iter)
     {
         for (auto jter = iter + 1; jter != endIter; ++jter)
         {
             auto delta = iter->position - jter->position;
-            edges.emplace_back(std::make_pair(&(*iter), &(*jter)), std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z), cola::ParticleClass::spectatorB);
+            edges.emplace_back(std::make_pair(&(*iter), &(*jter)), std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z), cola::ParticleClass::kSpectatorB);
         }
     }
     return edges;
@@ -110,12 +131,12 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
 {
     cola::EventParticles clusters;
 
-    auto& root = side == cola::ParticleClass::spectatorA ? rootA : rootB;
-    auto bIter = side == cola::ParticleClass::spectatorA ? spectIterA : spectIterB;
-    auto eIter = side == cola::ParticleClass::spectatorA ? spectIterB : endIter;
+    auto& root = side == cola::ParticleClass::kSpectatorA ? rootA : rootB;
+    auto bIter = side == cola::ParticleClass::kSpectatorA ? spectIterA : spectIterB;
+    auto eIter = side == cola::ParticleClass::kSpectatorA ? spectIterB : endIter;
 
-    uint32_t sourceA = cola::pdgToAZ(side == cola::ParticleClass::spectatorA ? data.iniState.pdgCodeA : data.iniState.pdgCodeB).first;
-    // boost to rest frame for each set of spectators
+    uint32_t sourceA = cola::PdgToAZ(side == cola::ParticleClass::kSpectatorA ? data.ini_state.pdg_code_a : data.ini_state.pdg_code_b).first;
+    // Boost to rest frame for each set of kSpectators
     cola::LorentzVector pNucleus = {0.0, 0.0, 0.0, 0.0};
     for (auto particleIt = bIter; particleIt != eIter; ++particleIt)
     {
@@ -123,7 +144,7 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
     }
     for (auto particleIt = bIter; particleIt != eIter; ++particleIt)
     {
-        particleIt->momentum.boost(-pNucleus);
+        particleIt->momentum.Boost(-pNucleus);
     }
     const auto count = std::distance(bIter, eIter);
 
@@ -145,7 +166,7 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
 
             for (const auto* nucleon : topView->vertices)
             {
-                cola::AZ componentAZ = nucleon->getAZ();
+                cola::AZ componentAZ = nucleon->GetAZ();
                 clusterAZ.first += componentAZ.first;
                 clusterAZ.second += componentAZ.second;
                 position += nucleon->position;
@@ -154,8 +175,8 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
             cola::Particle cluster;
             cluster.position = position / topView->vertices.size();
             cluster.momentum = momentum;
-            cluster.pdgCode = cola::AZToPdg(clusterAZ);
-            cluster.pClass = side;
+            cluster.pdg_code = cola::AZToPdg(clusterAZ);
+            cluster.p_class = side;
             clusters.push_back(cluster);
         } else if (topView->children.has_value())
         {
@@ -174,9 +195,9 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
 
     for (const auto& cluster: clusters)
     {
-        double mass = G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.getAZ().first), static_cast<G4int>(cluster.getAZ().second));
+        double mass = G4NucleiProperties::GetNuclearMass(static_cast<G4int>(cluster.GetAZ().first), static_cast<G4int>(cluster.GetAZ().second));
         totalMass += mass;
-        if (cluster.pdgCode != 2212 && cluster.pdgCode != 2112) mass += exEn * cluster.getAZ().first / sourceA;
+        if (cluster.pdg_code != 2212 && cluster.pdg_code != 2112) mass += exEn * cluster.GetAZ().first / sourceA;
         masses.push_back(mass);
         totalMassEx += mass;
     }
@@ -195,7 +216,7 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
     } else {
         for (size_t i = 0; i < clusters.size(); ++i)
         {
-            clusters[i].momentum.e = std::sqrt(std::pow(masses[i], 2) + clusters[i].momentum.spatialPart().mag2());
+            clusters[i].momentum.e = std::sqrt(std::pow(masses[i], 2) + clusters[i].momentum.SpatialPart().Mag2());
         }
     }
 
@@ -205,10 +226,10 @@ cola::EventParticles CoordinateMSTClustering::_process_side(const cola::EventDat
         RepulsionStage::CalculateRepulsion(std::move(clusters));
     }
 
-    // boost back from rest frame
+    // Boost back from rest frame
     for (auto& cluster: clusters)
     {
-        cluster.momentum.boost(pNucleus);
+        cluster.momentum.Boost(pNucleus);
     }
 
     return clusters;

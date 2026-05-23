@@ -1,4 +1,25 @@
+/**
+ * Copyright (c) 2026 Savva Savenkov, Artemii Novikov
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include "Repulsion.hh"
+
+using namespace cola;
 
 namespace RepulsionStage {
 
@@ -52,7 +73,7 @@ void BHTree::BuildBHTree(const cola::EventParticles& frags) {
   rootnode_ = InitializeRoot(frags);
 
   for (size_t i = 0; i < frags.size(); i++) {
-    InsertFragment(rootnode_, frags.at(i).position.spatialPart(), i, frags.at(i).getAZ().second);
+    InsertFragment(rootnode_, frags.at(i).position.SpatialPart(), i, frags.at(i).GetAZ().second);
   }
 }
 
@@ -101,10 +122,10 @@ double BHTree::GetAdaptiveTimeDelta() const {
   for (size_t i = 0; i < frags_.size(); i++) {
     auto mnt = frags_.at(i).momentum;
     double mval = std::sqrt(mnt.x * mnt.x + mnt.y * mnt.y + mnt.z * mnt.z);
-    if (!frags_.at(i).getAZ().second || !fs_[i].mag() || !mval) {
+    if (!frags_.at(i).GetAZ().second || !fs_[i].Mag() || !mval) {
       continue;
     }
-    min_time = std::min(min_time, 0.05 *  mval / fs_[i].mag());
+    min_time = std::min(min_time, 0.05 *  mval / fs_[i].Mag());
   }
   return min_time;
 }
@@ -113,20 +134,20 @@ std::vector<cola::Vector3<double>> BHTree::Iterate(double time_delta) {
   std::vector<cola::Vector3<double>> r_delta(frags_.size());
 
   for (size_t i = 0; i < frags_.size(); ++i) {
-    if (frags_.at(i).getAZ().second == 0) {
+    if (frags_.at(i).GetAZ().second == 0) {
       continue;
     }
     cola::LorentzVector p = frags_.at(i).momentum;
     cola::Vector3<double> half_dp = fs_[i] * time_delta * 0.5;
 
-    cola::Vector3<double> mid_v = (p.spatialPart() + half_dp) / std::sqrt((p.spatialPart() + half_dp).mag2() + p.mag2());
+    cola::Vector3<double> mid_v = (p.SpatialPart() + half_dp) / std::sqrt((p.SpatialPart() + half_dp).Mag2() + p.Mag2());
     r_delta[i] = cola::Vector3<double>{time_delta * mid_v.x, time_delta * mid_v.y, time_delta * mid_v.z};
 
-    cola::Vector3<double> pvec = p.spatialPart() + 2 * half_dp;
+    cola::Vector3<double> pvec = p.SpatialPart() + 2 * half_dp;
     p.x = pvec.x;
     p.y = pvec.y;
     p.z = pvec.z;
-    p.e = std::sqrt((p.spatialPart() + 2 * half_dp).mag2() + p.mag2());
+    p.e = std::sqrt((p.SpatialPart() + 2 * half_dp).Mag2() + p.Mag2());
 
     frags_.at(i).momentum = p;
   }
@@ -153,7 +174,7 @@ cola::Vector3<double> BHTree::Force(const BHNode* rootnode, const BHNode* node) 
   if (rootnode->nPart == 1) {
     return DuoForce(node->cr - rootnode->cr, rootnode->Z);
   }
-  if ((rootnode->size / (node->cr - rootnode->cr).mag()) < theta) {
+  if ((rootnode->size / (node->cr - rootnode->cr).Mag()) < theta) {
     return DuoForce(node->cr - rootnode->cr, rootnode->Z);
   }
   cola::Vector3<double> totalForce = {0.0, 0.0, 0.0};
@@ -164,7 +185,7 @@ cola::Vector3<double> BHTree::Force(const BHNode* rootnode, const BHNode* node) 
 }
 
 cola::Vector3<double> BHTree::DuoForce(const cola::Vector3<double> vec, const double from_Z) const {
-  return vec * (CLHEP::elm_coupling * from_Z / std::pow(vec.mag(), 3));
+  return vec * (CLHEP::elm_coupling * from_Z / std::pow(vec.Mag(), 3));
 }
 
 void BHNode::Divide() {
