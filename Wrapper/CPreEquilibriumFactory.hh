@@ -31,7 +31,7 @@ namespace cola {
         std::unique_ptr<VFilter> Create(const std::unordered_map<std::string, std::string>&) final;
 
         const std::string& GetFilterName() const override {
-            static const std::string name{"G4DeexcitationHandler"};
+            static const std::string name{"CPreEquilibrium"};
             return name;
         }
 
