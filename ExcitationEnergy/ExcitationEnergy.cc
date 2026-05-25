@@ -43,9 +43,9 @@ namespace exc_en_default_vals {
 }  // namespace exc_en_default_vals
 
 static G4double GaimardSchmidt(G4double E, G4double evaporation_energy, G4int a_final, G4int a_initial) {
-  G4double g0=16.;
-  G4double g1=0.7;
-  G4int RemovedNucleons = a_initial-a_final;
+  G4double g0 = 16.;
+  G4double g1 = 0.7;
+  G4int RemovedNucleons = a_initial - a_final;
   G4double res = 0.;
   G4double testRes = 0.;
 
@@ -82,8 +82,9 @@ static G4double GaimardSchmidt(G4double E, G4double evaporation_energy, G4int a_
 }
 
 static G4double Ericson(G4double E, G4double evaporation_energy, G4int a_final, G4int a_initial) {
-  G4double g0=16; //16 was in Shidenberger - not influence calculations at all cause its freeze out in distr normalization.
-  G4int RemovedNucleons = a_initial-a_final;
+  G4double g0 =
+      16;  // 16 was in Shidenberger - not influence calculations at all cause its freeze out in distr normalization.
+  G4int RemovedNucleons = a_initial - a_final;
 
   if (E > evaporation_energy * (a_initial - a_final)) {
     G4double s = 0;
@@ -137,18 +138,19 @@ void ExcitationEnergy::SetParametersALADIN(G4double e0_in, G4double sigma0_in, G
     alpha_switch_ = pow((e0_ / ebound_) * (alpha_switch_ * (1 - 1 / (static_cast<G4double>(init_a_))) +
                                            1 / static_cast<G4double>(init_a_) - alpha_switch_ * alpha_switch_),
                         0.66666666666666);
-    }
-    //std::cout<<"alphaSwitch is set equal to "<<alphaSwitch<<"\n";
- }
-
- void ExcitationEnergy::SetParametersEricson(G4double g0_in) { g0_ = g0_in; }
-
- void ExcitationEnergy::SetParametersGaimardSchmidt(G4double g0_in, G4double g1_in) {
-   g0_ = g0_in;
-   g1_ = g1_in;
+  }
+  // std::cout<<"alphaSwitch is set equal to "<<alphaSwitch<<"\n";
 }
 
-void ExcitationEnergy::SetParametersCorrectedALADIN(G4double e0_in, G4double c0_in, G4double sigma0_in, G4double b0_in, G4double b1_in) {
+void ExcitationEnergy::SetParametersEricson(G4double g0_in) { g0_ = g0_in; }
+
+void ExcitationEnergy::SetParametersGaimardSchmidt(G4double g0_in, G4double g1_in) {
+  g0_ = g0_in;
+  g1_ = g1_in;
+}
+
+void ExcitationEnergy::SetParametersCorrectedALADIN(G4double e0_in, G4double c0_in, G4double sigma0_in, G4double b0_in,
+                                                    G4double b1_in) {
   e0_ = e0_in;
   c0_ = c0_in;
   sigma0_ = sigma0_in;
@@ -167,9 +169,9 @@ void ExcitationEnergy::SetParametersCorrectedALADINFromFile() {
       break;
     }
     iter++;
-    }
-    SetParametersCorrectedALADIN(param_vect.at(0), param_vect.at(1), param_vect.at(2), param_vect.at(3),
-                                 param_vect.at(4));
+  }
+  SetParametersCorrectedALADIN(param_vect.at(0), param_vect.at(1), param_vect.at(2), param_vect.at(3),
+                               param_vect.at(4));
 }
 
 void ExcitationEnergy::SetParametersParabolicApproximation(G4double pe_in, G4double pm_in, G4double sigma_p_in,
@@ -181,7 +183,9 @@ void ExcitationEnergy::SetParametersParabolicApproximation(G4double pe_in, G4dou
   b_p1_ = b_p1_in;
 }
 
-void ExcitationEnergy::SetParametersHybridFit(G4double a0_in, G4double a1_in, G4double a2_in, G4double a3_in, G4double a4_in, G4double a5_in, G4double a6_in, G4double sigma1_in, G4double sigma2_in, G4double sigma3_in) {
+void ExcitationEnergy::SetParametersHybridFit(G4double a0_in, G4double a1_in, G4double a2_in, G4double a3_in,
+                                              G4double a4_in, G4double a5_in, G4double a6_in, G4double sigma1_in,
+                                              G4double sigma2_in, G4double sigma3_in) {
   a0_ = a0_in;
   a1_ = a1_in;
   a2_ = a2_in;

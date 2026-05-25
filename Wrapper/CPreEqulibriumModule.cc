@@ -19,4 +19,4 @@
 
 #include "CPreEquilibriumModule.hh"
 
-extern "C" cola::VModule* LoadCOLAModule() {return new cola::CPreEquilibriumModule; }
+extern "C" cola::VModule* LoadCOLAModule() { return new cola::CPreEquilibriumModule; }

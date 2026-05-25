@@ -20,75 +20,68 @@
 #ifndef CCLUSTERING_MSTCLUSTERING_H
 #define CCLUSTERING_MSTCLUSTERING_H
 
-#include <optional>
-#include <memory>
-#include <algorithm>
-#include <vector>
-#include <map>
-
 #include <COLA.hh>
+
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace cola {
 
-    class MSTClustering : public VConverter {
-    public:
-        MSTClustering() = default;
-        ~MSTClustering() override = default;
-        MSTClustering& operator=(const MSTClustering&) = delete;
-        MSTClustering& operator=(MSTClustering&&) = delete;
-        MSTClustering(const MSTClustering&) = delete;
-        MSTClustering(MSTClustering&&) = delete;
+  class MSTClustering : public VConverter {
+   public:
+    MSTClustering() = default;
+    ~MSTClustering() override = default;
+    MSTClustering& operator=(const MSTClustering&) = delete;
+    MSTClustering& operator=(MSTClustering&&) = delete;
+    MSTClustering(const MSTClustering&) = delete;
+    MSTClustering(MSTClustering&&) = delete;
 
-        std::unique_ptr<EventData> operator()(std::unique_ptr<EventData>&& data) final;
+    std::unique_ptr<EventData> operator()(std::unique_ptr<EventData>&& data) final;
 
-    protected:
-        using nPair = std::pair<Particle*, Particle*>;        // vertices pair
-        struct Edge {                               // edge
-            nPair vert;
-            double size;
-            ParticleClass p_class;
-            Edge(nPair vert_, double size_, ParticleClass p_class_) : vert(vert_), size(size_), p_class(p_class_) {};
-        };
-
-        // a single Node with children.
-        struct Node {
-            explicit Node(Particle& vertex)
-                : height(0.)
-                , vertices({&vertex})
-            {
-            }
-            Node() = default;
-            Node(Node* first, Node* second, double height_)
-                : height(height_)
-                , vertices(first->vertices)
-                , children(std::make_pair(first, second))
-            {
-                vertices.insert(vertices.end(), second->vertices.begin(), second->vertices.end()); // append second vector
-            }
-
-            Node(Node&&) noexcept = default;
-
-            double height = 0.;
-            std::vector<Particle*> vertices;
-            std::optional<std::pair<Node*, Node*>> children;
-        };
-
-        Node* rootA;
-        Node* rootB;
-
-        // it is reasonable to use the iterators for quick access to spectators even at this abstract level, so this class has it
-        EventParticles::iterator spectIterA;
-        EventParticles::iterator spectIterB;
-        EventParticles::iterator endIter;
-
-    private:
-
-        void construct_trees(std::vector<Edge>&& edgeData, std::vector<Node>& nodes);
-
-        // get full graph data from EventData
-        virtual std::vector<Edge> get_edges(const EventData&) = 0;
-        // construct clusters
-        virtual std::unique_ptr<EventData> get_clusters(std::unique_ptr<EventData>&&) = 0;
+   protected:
+    using nPair = std::pair<Particle*, Particle*>;  // vertices pair
+    struct Edge {                                   // edge
+      nPair vert;
+      double size;
+      ParticleClass p_class;
+      Edge(nPair vert_, double size_, ParticleClass p_class_) : vert(vert_), size(size_), p_class(p_class_) {};
     };
-} // namespace cola
-#endif // CCLUSTERING_MSTCLUSTERING_H
+
+    // a single Node with children.
+    struct Node {
+      explicit Node(Particle& vertex) : height(0.), vertices({&vertex}) {}
+      Node() = default;
+      Node(Node* first, Node* second, double height_)
+          : height(height_), vertices(first->vertices), children(std::make_pair(first, second)) {
+        vertices.insert(vertices.end(), second->vertices.begin(), second->vertices.end());  // append second vector
+      }
+
+      Node(Node&&) noexcept = default;
+
+      double height = 0.;
+      std::vector<Particle*> vertices;
+      std::optional<std::pair<Node*, Node*>> children;
+    };
+
+    Node* rootA;
+    Node* rootB;
+
+    // it is reasonable to use the iterators for quick access to spectators even at this abstract level, so this class
+    // has it
+    EventParticles::iterator spectIterA;
+    EventParticles::iterator spectIterB;
+    EventParticles::iterator endIter;
+
+   private:
+    void construct_trees(std::vector<Edge>&& edgeData, std::vector<Node>& nodes);
+
+    // get full graph data from EventData
+    virtual std::vector<Edge> get_edges(const EventData&) = 0;
+    // construct clusters
+    virtual std::unique_ptr<EventData> get_clusters(std::unique_ptr<EventData>&&) = 0;
+  };
+}  // namespace cola
+#endif  // CCLUSTERING_MSTCLUSTERING_H

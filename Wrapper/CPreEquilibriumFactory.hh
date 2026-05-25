@@ -26,20 +26,20 @@
 
 namespace cola {
 
-    class CPreEquilibriumFactory final: public VConverterFactory {
-    public:
-        std::unique_ptr<VFilter> Create(const std::unordered_map<std::string, std::string>&) final;
+  class CPreEquilibriumFactory final : public VConverterFactory {
+   public:
+    std::unique_ptr<VFilter> Create(const std::unordered_map<std::string, std::string>&) final;
 
-        const std::string& GetFilterName() const override {
-            static const std::string name{"CPreEquilibrium"};
-            return name;
-        }
+    const std::string& GetFilterName() const override {
+      static const std::string name{"CPreEquilibrium"};
+      return name;
+    }
 
-    private:
-        std::optional<bool> repulsion;
-        std::optional<bool> momentum;
-        std::optional<int> excitationEnergyType;
-    };
+   private:
+    std::optional<bool> repulsion;
+    std::optional<bool> momentum;
+    std::optional<int> excitationEnergyType;
+  };
 
-} // namespace cola
-#endif //CGLAUBER_CCLUSTERINGFACTORY_HH
+}  // namespace cola
+#endif  // CGLAUBER_CCLUSTERINGFACTORY_HH

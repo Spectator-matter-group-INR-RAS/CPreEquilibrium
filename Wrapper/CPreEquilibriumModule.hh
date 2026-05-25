@@ -20,11 +20,11 @@
 #ifndef CCLUSTERING_CCLUSTERINGMODULE_HH
 #define CCLUSTERING_CCLUSTERINGMODULE_HH
 
-#include "CPreEquilibriumFactory.hh"
 #include "COLA.hh"
+#include "CPreEquilibriumFactory.hh"
 
 namespace cola {
-    using CPreEquilibriumModule = GenericModule<CPreEquilibriumFactory>;
-} // namespace cola
+  using CPreEquilibriumModule = GenericModule<CPreEquilibriumFactory>;
+}  // namespace cola
 
-#endif //CCLUSTERING_CCLUSTERINGMODULE_HH
+#endif  // CCLUSTERING_CCLUSTERINGMODULE_HH

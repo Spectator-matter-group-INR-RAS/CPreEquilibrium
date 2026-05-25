@@ -77,43 +77,47 @@ set_target_properties(
                INSTALL_RPATH_USE_LINK_PATH ON
 )
 
-# Add installation path for library to find .dat files:
-add_compile_definitions(DATA_INSTALL="${CMAKE_INSTALL_PREFIX}/data/${COLA_MODULE_NAME}/")
+# Check for COLA_FETCH_MODE to prevent install instructions from generating and change data path.
+if(NOT COLA_FETCH_MODE)
+        add_compile_definitions(DATA_INSTALL="${CMAKE_INSTALL_PREFIX}/data/${COLA_MODULE_NAME}/")
 
-# Configure config files
-configure_package_config_file(
-    "${PROJECT_SOURCE_DIR}/cmake/${COLA_MODULE_NAME}Config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}Config.cmake"
-    INSTALL_DESTINATION lib/cmake/${COLA_MODULE_NAME}
-)
+        # Configure config files
+        configure_package_config_file(
+        "${PROJECT_SOURCE_DIR}/cmake/${COLA_MODULE_NAME}Config.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}Config.cmake"
+        INSTALL_DESTINATION lib/cmake/${COLA_MODULE_NAME}
+        )
 
-write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}ConfigVersion.cmake
-    VERSION ${CPreEquilibrium_Version}
-    COMPATIBILITY AnyNewerVersion
-)
+        write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}ConfigVersion.cmake
+        VERSION ${CPreEquilibrium_Version}
+        COMPATIBILITY AnyNewerVersion
+        )
 
-# Install library
-install(
-    TARGETS CPreEquilibrium
-    EXPORT CPreEquilibriumExport
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${COLA_MODULE_NAME}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${COLA_MODULE_NAME}
-    INCLUDES
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${COLA_MODULE_NAME}
-)
+        # Install library
+        install(
+        TARGETS CPreEquilibrium
+        EXPORT CPreEquilibriumExport
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${COLA_MODULE_NAME}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${COLA_MODULE_NAME}
+        INCLUDES
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${COLA_MODULE_NAME}
+        )
 
-# Install export file and config files
-install(EXPORT CPreEquilibriumExport DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${COLA_MODULE_NAME})
+        # Install export file and config files
+        install(EXPORT CPreEquilibriumExport DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${COLA_MODULE_NAME})
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}Config.cmake"
-              "${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}ConfigVersion.cmake"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${COLA_MODULE_NAME}
-)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}Config.cmake"
+                "${CMAKE_CURRENT_BINARY_DIR}/${COLA_MODULE_NAME}ConfigVersion.cmake"
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${COLA_MODULE_NAME}
+        )
 
-#install .dat files for excitation energy calculation
-install(FILES ${PROJECT_SOURCE_DIR}/ExcitationEnergy/CorrectedALADINParameters.dat
-        DESTINATION data/${COLA_MODULE_NAME}
-)
+        #install .dat files for excitation energy calculation
+        install(FILES ${PROJECT_SOURCE_DIR}/ExcitationEnergy/CorrectedALADINParameters.dat
+                DESTINATION data/${COLA_MODULE_NAME}
+        )
 
-setup_cola_quality_tools()
+        setup_cola_quality_tools()
+else()
+        add_compile_definitions(DATA_INSTALL="${PROJECT_SOURCE_DIR}/data/ExcitationEnergy/")
+endif()

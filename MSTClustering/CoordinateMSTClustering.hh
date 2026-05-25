@@ -20,36 +20,36 @@
 #ifndef CCLUSTERING_GMSTCLUSTERING_H
 #define CCLUSTERING_GMSTCLUSTERING_H
 
-#include <algorithm>
-#include <memory>
+#include "MSTClustering.hh"
 
 #include <G4ExcitationHandler.hh>
 #include <G4FermiPhaseDecay.hh>
-#include <G4ReactionProductVector.hh>
 #include <G4NucleiProperties.hh>
+#include <G4ReactionProductVector.hh>
 
-#include "MSTClustering.hh"
+#include <algorithm>
+#include <memory>
 
 namespace cola {
 
   class CoordinateMSTClustering : public MSTClustering {
-    public:
-      CoordinateMSTClustering() = delete;
-      CoordinateMSTClustering(bool consider_rep, bool extra_momentum, int stat_exen_type) : _consider_rep(consider_rep),
-        _extra_momentum(extra_momentum), _stat_exen_type(stat_exen_type) {};
-    private:
+   public:
+    CoordinateMSTClustering() = delete;
+    CoordinateMSTClustering(bool consider_rep, bool extra_momentum, int stat_exen_type)
+        : _consider_rep(consider_rep), _extra_momentum(extra_momentum), _stat_exen_type(stat_exen_type) {};
 
-      static constexpr double nucleonAverMass = 0.93891875434*CLHEP::GeV;
-      bool _consider_rep;
-      bool _extra_momentum;
-      uint32_t _stat_exen_type;
+   private:
+    static constexpr double nucleonAverMass = 0.93891875434 * CLHEP::GeV;
+    bool _consider_rep;
+    bool _extra_momentum;
+    uint32_t _stat_exen_type;
 
-      std::vector<Edge> get_edges(const EventData&) final;
-      std::unique_ptr<EventData> get_clusters(std::unique_ptr<EventData>&&) final;
-      EventParticles _process_side(const EventData&, ParticleClass);
+    std::vector<Edge> get_edges(const EventData&) final;
+    std::unique_ptr<EventData> get_clusters(std::unique_ptr<EventData>&&) final;
+    EventParticles _process_side(const EventData&, ParticleClass);
 
-      G4FermiPhaseDecay phaseSpaceDecay;
+    G4FermiPhaseDecay phaseSpaceDecay;
   };
 
-} // namespace cola 
-#endif //CCLUSTERING_GMSTCLUSTERING_H
+}  // namespace cola
+#endif  // CCLUSTERING_GMSTCLUSTERING_H
