@@ -78,8 +78,8 @@ set_target_properties(
 )
 
 # Check for COLA_FETCH_MODE to prevent install instructions from generating and change data path.
-if(NOT COLA_FETCH_MODE)
-        add_compile_definitions(DATA_INSTALL="${CMAKE_INSTALL_PREFIX}/data/${COLA_MODULE_NAME}/")
+if(NOT DEFINED ENV{COLA_FETCH_MODE})
+        target_compile_definitions(CPreEquilibrium PRIVATE DATA_INSTALL="${CMAKE_INSTALL_PREFIX}/data/${COLA_MODULE_NAME}/")
 
         # Configure config files
         configure_package_config_file(
@@ -119,5 +119,5 @@ if(NOT COLA_FETCH_MODE)
 
         setup_cola_quality_tools()
 else()
-        add_compile_definitions(DATA_INSTALL="${PROJECT_SOURCE_DIR}/data/ExcitationEnergy/")
+        target_compile_definitions(CPreEquilibrium PRIVATE DATA_INSTALL="${PROJECT_SOURCE_DIR}/ExcitationEnergy/")
 endif()
