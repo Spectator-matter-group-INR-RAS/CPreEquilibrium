@@ -78,7 +78,7 @@ set_target_properties(
 )
 
 # Check for COLA_FETCH_MODE to prevent install instructions from generating and change data path.
-if(NOT DEFINED $ENV{COLA_FETCH_MODE})
+if(NOT DEFINED ENV{COLA_FETCH_MODE})
         add_compile_definitions(DATA_INSTALL="${CMAKE_INSTALL_PREFIX}/data/${COLA_MODULE_NAME}/")
 
         # Configure config files
