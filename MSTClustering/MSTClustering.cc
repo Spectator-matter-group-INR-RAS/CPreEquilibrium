@@ -93,6 +93,10 @@ std::unique_ptr<cola::EventData> MSTClustering::operator()(std::unique_ptr<cola:
   spectIterB = std::find_if(data->particles.begin(), data->particles.end(),
                             [](cola::Particle p) { return p.p_class == cola::ParticleClass::kSpectatorB; });
   endIter = data->particles.end();
+  // An absent A side is an empty range ending where the B side begins.
+  if (spectIterA == endIter) {
+    spectIterA = spectIterB;
+  }
   // construct trees
   std::vector<Node> nodes;  // stores all nodes in trees (improves cpu cache hits)
   construct_trees(get_edges(*data), nodes);
