@@ -89,7 +89,10 @@ std::unique_ptr<cola::EventData> MSTClustering::operator()(std::unique_ptr<cola:
   std::sort(data->particles.begin(), data->particles.end(),
             [](const cola::Particle& l, const cola::Particle& r) { return l.p_class < r.p_class; });
   spectIterA = std::find_if(data->particles.begin(), data->particles.end(),
-                            [](cola::Particle p) { return p.p_class == cola::ParticleClass::kSpectatorA; });
+                            [](cola::Particle p) {
+                              return p.p_class == cola::ParticleClass::kSpectatorA ||
+                                     p.p_class == cola::ParticleClass::kSpectatorB;
+                            });
   spectIterB = std::find_if(data->particles.begin(), data->particles.end(),
                             [](cola::Particle p) { return p.p_class == cola::ParticleClass::kSpectatorB; });
   endIter = data->particles.end();
