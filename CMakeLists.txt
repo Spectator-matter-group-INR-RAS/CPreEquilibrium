@@ -24,6 +24,9 @@ project(
 
 set(CMAKE_CXX_STANDARD 20)
 
+get_property(uselib64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+message(STATUS "uselib64=${uselib64}")
+
 find_package(COLA REQUIRED)
 find_package(Geant4 REQUIRED)
 
@@ -47,7 +50,7 @@ file(
 
 add_library(CPreEquilibrium SHARED ${srcs})
 
-target_compile_features(CPreEquilibrium PRIVATE cxx_std_17)
+target_compile_features(CPreEquilibrium PRIVATE cxx_std_20)
 
 target_include_directories(
     CPreEquilibrium
