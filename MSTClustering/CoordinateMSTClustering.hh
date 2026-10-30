@@ -36,7 +36,7 @@ namespace cola {
    public:
     CoordinateMSTClustering() = delete;
     CoordinateMSTClustering(bool consider_rep, bool extra_momentum, int stat_exen_type)
-        : consider_rep_(consider_rep), extra_momentum_(extra_momentum), stat_exen_type_(stat_exen_type) {};
+        : consider_rep_(consider_rep), extra_momentum_(extra_momentum), stat_exen_type_(stat_exen_type) {}
 
    private:
     static constexpr double kNucleonAverMass = 0.93891875434 * CLHEP::GeV;

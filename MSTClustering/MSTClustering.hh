@@ -47,7 +47,7 @@ namespace cola {
       nPair vert;
       double size;
       ParticleClass p_class;
-      Edge(nPair vert, double size, ParticleClass p_class) : vert(std::move(vert)), size(size), p_class(p_class) {};
+      Edge(nPair vert, double size, ParticleClass p_class) : vert(std::move(vert)), size(size), p_class(p_class) {}
     };
 
     // a single Node with children.
