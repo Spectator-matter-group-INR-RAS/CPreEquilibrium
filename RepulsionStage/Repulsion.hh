@@ -52,7 +52,7 @@ namespace repulsion_stage {
 
     BHNode() = default;
     BHNode(double size, const cola::Vector3<double>& ctr)
-        : size(size), ctr(ctr), total_z(0), n_part(0), cr({.x = 0.0, .y = 0.0, .z = 0.0}), index(-1) {};
+        : size(size), ctr(ctr), total_z(0), n_part(0), cr({.x = 0.0, .y = 0.0, .z = 0.0}), index(-1) {}
     ~BHNode() = default;
     void Divide();
   };

@@ -90,15 +90,14 @@ void MSTClustering::ConstructTrees(std::vector<Edge>&& edge_data, std::vector<No
 std::unique_ptr<cola::EventData> MSTClustering::operator()(std::unique_ptr<cola::EventData>&& data) {
   // sort particles by p_class (spectators are last)
   std::sort(data->particles.begin(), data->particles.end(),
-            [](const cola::Particle& l, const cola::Particle& r) { return l.p_class < r.p_class; });
-  spectIterA = std::find_if(data->particles.begin(), data->particles.end(),
-                            [](cola::Particle p) {
-                              return p.p_class == cola::ParticleClass::kSpectatorA ||
-                                     p.p_class == cola::ParticleClass::kSpectatorB;
-                            });
-  spectIterB = std::find_if(data->particles.begin(), data->particles.end(),
-                            [](cola::Particle p) { return p.p_class == cola::ParticleClass::kSpectatorB; });
-  endIter = data->particles.end();
+            [](const cola::Particle& left, const cola::Particle& right) { return left.p_class < right.p_class; });
+  spect_iter_a_ = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle particle) {
+    return particle.p_class == cola::ParticleClass::kSpectatorA || particle.p_class == cola::ParticleClass::kSpectatorB;
+  });
+  spect_iter_b_ = std::find_if(data->particles.begin(), data->particles.end(), [](cola::Particle particle) {
+    return particle.p_class == cola::ParticleClass::kSpectatorB;
+  });
+  end_iter_ = data->particles.end();
   // construct trees
   std::vector<Node> nodes;  // stores all nodes in trees (improves cpu cache hits)
   ConstructTrees(GetEdges(*data), nodes);
